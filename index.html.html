@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#101827">
+<title>予算管理システム</title>
+<style>
+:root{--ink:#183047;--muted:#71879a;--line:#e2eee9;--bg:#f2faf6;--green:#238568;--green-light:#e1f5ec;--blue:#315be8;--card:#fff}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif}
+.app{max-width:520px;min-height:100vh;margin:auto;background:var(--bg);padding-bottom:94px}
+header{background:linear-gradient(135deg,#172c46,#244d59);color:white;padding:24px 20px 22px;border-radius:0 0 26px 26px}
+.topline{display:flex;align-items:center;justify-content:space-between;gap:10px}
+h1{font-size:21px;margin:0;font-weight:800;letter-spacing:.02em}header p{margin:7px 0 0;color:#c5cfdd;font-size:12px}
+.mode-switch{display:flex;background:#e5f0eb;border-radius:16px;padding:5px;gap:4px;margin:16px 0}
+.mode-switch button{flex:1;background:transparent;color:#596579;padding:10px 6px;font-size:13px}
+.mode-switch button.active{background:#fff;color:#183047;box-shadow:0 3px 8px #18304714}
+main{padding:15px}.page{display:none}.page.active{display:block}
+.card{background:var(--card);border:1px solid #e7f0eb;border-radius:22px;padding:18px;margin-bottom:14px;box-shadow:0 6px 20px #1c594012}
+.label{font-size:12px;color:var(--muted);margin-bottom:6px}
+.hero{background:linear-gradient(135deg,#1b705d,#299b78);color:#fff;border-radius:25px;padding:22px;margin-bottom:14px;box-shadow:0 10px 24px #16856726}
+.hero .label{color:#d4f3e8}.hero .big{font-size:34px;font-weight:850;letter-spacing:-1px;margin:4px 0 8px}
+.hero .sub{font-size:12px;color:#d4f3e8;line-height:1.5}
+h2{font-size:16px;margin:0 0 13px}.section-head{display:flex;align-items:center;justify-content:space-between}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}.stat{background:#f0faf5;border:1px solid #e1f1e8;border-radius:17px;padding:13px;min-width:0}
+.stat .num{font-size:19px;font-weight:800;overflow-wrap:anywhere}.stat .label{margin-bottom:5px}
+input,select{width:100%;border:1px solid #dce3eb;border-radius:11px;padding:12px;font-size:16px;background:#fff;color:var(--ink);outline:none}
+input:focus,select:focus{border-color:#6d8cff;box-shadow:0 0 0 3px #315be815}
+.field{margin-top:11px}.formula{background:#f1f5f9;border-radius:12px;padding:12px;font-size:13px;line-height:1.7;font-weight:700;text-align:center}
+button{border:0;border-radius:12px;padding:12px 14px;font-size:14px;font-weight:750;cursor:pointer}
+.primary{background:#1b705d;color:white;width:100%;margin-top:14px;border-radius:15px;box-shadow:0 4px 10px #1b705d20}.soft{background:#edf2f7;color:#334155}
+.small-btn{padding:7px 10px;font-size:12px}.note{font-size:11px;color:var(--muted);line-height:1.6;margin-top:8px}
+.item{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid #eef1f5}.item:last-child{border-bottom:0}
+.item-title{font-size:14px;font-weight:700}.item-meta{font-size:11px;color:var(--muted);margin-top:4px}.amount{font-size:14px;font-weight:800;white-space:nowrap}
+.empty{text-align:center;color:#94a3b8;font-size:13px;padding:20px 5px}
+.pill{font-size:10px;border-radius:99px;padding:4px 7px;background:#e8eef8;color:#52617a}
+.progress{height:8px;background:#e9eef3;border-radius:99px;overflow:hidden;margin-top:9px}.progress>div{height:100%;background:#1d9a74;border-radius:99px;width:0}
+.chart-wrap{width:100%;margin-top:8px;background:#f8fcfa;border-radius:16px;padding:8px 4px}.chart-wrap svg{display:block;width:100%;height:auto;overflow:visible}.chart-legend{font-size:11px;color:var(--muted)}
+.nav{position:fixed;z-index:5;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:520px;display:flex;background:#ffffffed;backdrop-filter:blur(14px);border-top:1px solid var(--line);padding:8px 10px max(8px,env(safe-area-inset-bottom))}
+.nav button{flex:1;background:transparent;color:#8390a2;font-size:11px;padding:6px 2px;line-height:1.6}.nav button.active{color:#238568}
+.hidden{display:none!important}.negative{color:#b45309}.danger{color:#b91c1c}
+</style>
+
+<style>
+.cat-mascot{
+  position:relative;
+  width:110px;
+  height:92px;
+  margin:4px auto 10px;
+  display:flex;
+  justify-content:center;
+  align-items:flex-end;
+}
+.cat-mascot svg{width:110px;height:92px;overflow:visible}
+.cat-mascot .cat-bubble{
+  position:absolute;
+  right:-8px;
+  top:-3px;
+  background:#fff;
+  border:2px solid #dfe7e2;
+  border-radius:14px;
+  padding:5px 8px;
+  font-size:11px;
+  font-weight:700;
+  color:#17324d;
+  box-shadow:0 3px 10px rgba(23,50,77,.08);
+}
+</style>
+
+</head>
+<body>
+<div class="app">
+<header>
+  <div class="topline"><h1>予算管理システム</h1><span class="pill" id="monthLabel">翌月の予算</span></div>
+  <p>収入を見積もって、使えるお金を見える化。</p>
+</header>
+<main>
+  <div class="mode-switch">
+    <button id="normalMode" class="active" onclick="setMode('normal')">通常モード</button>
+    <button id="savingMode" onclick="setMode('saving')">節約モード</button>
+  </div>
+
+  <section id="home" class="page active">
+    <div class="hero">
+      <div class="label">自由に使える残り予算</div>
+      <div class="big" id="available">¥0</div>
+      <div class="sub" id="heroSub">収入から固定費・貯金目標などを差し引いた金額</div>
+    </div>
+    <div class="card">
+      <div class="section-head"><h2>お金の使いみち</h2><span class="pill">予算バランス</span></div>
+      <div class="chart-wrap" id="budgetChart"></div>
+      <div class="note">収入を固定費・先取り貯金・自由に使えるお金に分けて表示します。</div>
+    </div>
+    <div class="card">
+      <h2>翌月の収支見込み</h2>
+      <div class="grid">
+        <div class="stat"><div class="label">手取り収入</div><div class="num" id="incomeSummary">¥0</div></div>
+        <div class="stat"><div class="label">固定費合計</div><div class="num" id="fixedSummary">¥0</div></div>
+        <div class="stat"><div class="label">貯金目標</div><div class="num" id="savingSummary">¥0</div></div>
+        <div class="stat"><div class="label">今月の支出記録</div><div class="num" id="spentSummary">¥0</div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="section-head"><h2>① 収入を計算</h2><span class="pill">手取り見込み</span></div>
+      <div class="formula">時給 × 労働時間 ×（1 − 控除率 ÷ 100）<br>＋ 臨時収入 ＝ 収入見込み</div>
+      <div class="field"><div class="label">時給（円）</div><input id="hourlyInput" type="number" min="0" step="1" placeholder="例：1500"></div>
+      <div class="field"><div class="label">労働時間（翌月の合計・時間）</div><input id="hoursInput" type="number" min="0" step="0.5" placeholder="例：80"></div>
+      <div class="field"><div class="label">給与の控除率（%）</div><input id="deductionInput" type="number" min="0" max="100" step="0.1" placeholder="例：10"></div>
+      <div class="field"><div class="label">臨時収入（手取り額・円）</div><input id="bonusInput" type="number" min="0" step="1" placeholder="例：10000"></div>
+      <div class="grid" style="margin-top:12px">
+        <div class="stat"><div class="label">控除後の給与</div><div class="num" id="netSalary">¥0</div></div>
+        <div class="stat"><div class="label">収入合計</div><div class="num" id="incomePreview">¥0</div></div>
+      </div>
+
+      <h2 style="margin-top:22px">② 固定費を入力</h2>
+      <div class="field"><div class="label">水道代（円）</div><input id="waterInput" type="number" min="0" placeholder="例：2000"></div>
+      <div class="field"><div class="label">電気代（円）</div><input id="electricInput" type="number" min="0" placeholder="例：3000"></div>
+      <div class="field"><div class="label">ガス代（円）</div><input id="gasInput" type="number" min="0" placeholder="例：4000"></div>
+      <div class="field"><div class="label">家賃（円・自動保存）</div><input id="rentInput" type="number" min="0" placeholder="例：70000"></div>
+      <div class="field"><div class="label">食費予算（円）</div><input id="foodInput" type="number" min="0" placeholder="例：20000"></div>
+      <div id="savingTargetWrap" class="field">
+        <div class="label">先取り貯金したい金額（円）</div>
+        <input id="savingTargetInput" type="number" min="0" placeholder="例：20000">
+        <div class="note">節約モードでは、ここで設定した金額を先に差し引いて予算を計算します。</div>
+      </div>
+      <button class="primary" onclick="saveBudget()">設定を保存して予算を計算</button>
+      <div class="note">家賃・控除率・収入・固定費はこの端末のブラウザに保存されます。</div>
+    </div>
+  </section>
+
+  <section id="history" class="page">
+    <div class="card">
+      <div class="section-head"><h2>貯金額の推移</h2><span class="pill">累計</span></div>
+      <div id="savingsTotal" style="font-size:25px;font-weight:850">¥0</div>
+      <div class="chart-wrap" id="savingsChart"></div>
+      <div class="chart-legend">日ごとの貯金・取り崩しを反映した累計額</div>
+      <div class="note">貯金を記録すると折れ線グラフが更新されます。</div>
+    </div>
+    <div class="card">
+      <h2>貯金を記録</h2>
+      <div class="label">種類</div><select id="savingType"><option value="add">貯金する（増える）</option><option value="withdraw">取り崩す（減る）</option></select>
+      <div class="field"><div class="label">金額（円）</div><input id="savingAmount" type="number" min="1" placeholder="例：3000"></div>
+      <div class="field"><div class="label">日付</div><input id="savingDate" type="date"></div>
+      <div class="field"><div class="label">メモ（任意）</div><input id="savingMemo" placeholder="例：給料日に貯金"></div>
+      <button class="primary" onclick="addSaving()">貯金履歴に追加</button>
+    </div>
+    <div class="card">
+      <h2>支出を記録</h2>
+      <div class="field"><div class="label">内容</div><input id="expenseName" placeholder="例：友達との食事"></div>
+      <div class="field"><div class="label">カテゴリ</div><select id="expenseCategory"><option value="食費">食費</option><option value="遊び">遊び</option><option value="買い物">買い物</option><option value="交通費">交通費</option><option value="その他">その他</option></select></div>
+      <div class="field"><div class="label">金額（円）</div><input id="expenseAmount" type="number" min="1" placeholder="例：2500"></div>
+      <div class="field"><div class="label">日付</div><input id="expenseDate" type="date"></div>
+      <button class="primary" onclick="addExpense()">支出を記録</button>
+      <div style="height:1px;background:#e7f0eb;margin:20px 0 16px"></div>
+      <h2>固定費を支払ったら記録</h2>
+      <div class="note">ここで支払った金額を入力すると、履歴・貯金グラフに反映され、予算の固定費欄もその金額に自動更新されます。通常の支出額には二重計上しません。</div>
+      <div class="field"><div class="label">家賃（円）</div><input id="paidRentInput" type="number" min="0" placeholder="例：70000"></div>
+      <div class="field"><div class="label">ガス代（円）</div><input id="paidGasInput" type="number" min="0" placeholder="例：4000"></div>
+      <div class="field"><div class="label">水道代（円）</div><input id="paidWaterInput" type="number" min="0" placeholder="例：2000"></div>
+      <div class="field"><div class="label">電気代（円）</div><input id="paidElectricInput" type="number" min="0" placeholder="例：3000"></div>
+      <div class="field"><div class="label">支払日</div><input id="fixedExpenseDate" type="date"></div>
+      <button class="primary" onclick="addFixedExpenses()">固定費の支払いを記録</button>
+    </div>
+    <div class="card"><h2>貯金履歴</h2><div id="savingHistory"></div></div>
+    <div class="card"><h2>支出履歴</h2><div id="expenseHistory"></div></div>
+  </section>
+
+  <section id="settings" class="page">
+    <div class="card">
+      <h2>設定について</h2>
+      <p class="note">データはこの端末のブラウザ内に保存されます。同じ端末・同じブラウザで開くと履歴を引き継げます。ブラウザのデータを消去すると履歴も消える場合があります。</p>
+      <button class="soft" onclick="exportData()">データを書き出す</button>
+      <button class="soft" style="margin-top:9px;width:100%" onclick="resetRecords()">履歴だけ削除</button>
+      <button class="soft danger" style="margin-top:9px;width:100%" onclick="resetAll()">すべてのデータをリセット</button>
+    </div>
+  </section>
+</main>
+<nav class="nav">
+  <button class="active" onclick="showPage('home',this)">🏠<br>予算</button>
+  <button onclick="showPage('history',this)">📈<br>履歴</button>
+  <button onclick="showPage('settings',this)">⚙️<br>設定</button>
+</nav>
+</div>
+<script>
+const STORE='budgetSystemPrototype_v3';
+const defaults={mode:'normal',hourly:0,hours:0,deduction:10,bonus:0,water:0,electric:0,gas:0,rent:0,food:0,savingTarget:0,expenses:[],savings:[]};
+let data;
+try{data={...defaults,...JSON.parse(localStorage.getItem(STORE)||'{}')};}catch(e){data={...defaults};}
+// 既存の支出履歴も貯金の取り崩しとして反映（重複作成しない）
+(data.expenses||[]).forEach((e,i)=>{
+ if(!e.kind)e.kind='variable';
+ if(!data.savings.some(x=>x.linkedExpenseId===e.id)){
+  data.savings.push({id:Date.now()+i,amount:e.amount,type:'withdraw',date:e.date,memo:`支出：${e.name}`,linkedExpenseId:e.id});
+ }
+});
+save();
+const $=id=>document.getElementById(id);
+const yen=n=>'¥'+Math.round(Number(n)||0).toLocaleString('ja-JP');
+const today=()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`};
+function save(){try{localStorage.setItem(STORE,JSON.stringify(data));}catch(e){}}
+function incomeGross(){return Math.max(0,+data.hourly||0)*Math.max(0,+data.hours||0)}
+function netPay(){return incomeGross()*(1-Math.min(100,Math.max(0,+data.deduction||0))/100)}
+function incomeTotal(){return netPay()+Math.max(0,+data.bonus||0)}
+function fixedTotal(){return ['water','electric','gas','rent','food'].reduce((s,k)=>s+Math.max(0,+data[k]||0),0)}
+function savingTotal(){return data.savings.reduce((s,x)=>s+(x.type==='withdraw'?-x.amount:x.amount),0)}
+function spentTotal(){return data.expenses.filter(x=>x.kind!=='fixed').reduce((s,x)=>s+x.amount,0)}
+function available(){return incomeTotal()-fixedTotal()-(data.mode==='saving'?Math.max(0,+data.savingTarget||0):0)-spentTotal()}
+function setMode(mode){data.mode=mode;save();render();$('normalMode').classList.toggle('active',mode==='normal');$('savingMode').classList.toggle('active',mode==='saving');}
+function showPage(id,btn){document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));$(id).classList.add('active');document.querySelectorAll('.nav button').forEach(b=>b.classList.remove('active'));btn.classList.add('active');if(id==='history')renderHistory();}
+function loadInputs(){
+ const map={hourly:'hourlyInput',hours:'hoursInput',deduction:'deductionInput',bonus:'bonusInput',water:'waterInput',electric:'electricInput',gas:'gasInput',rent:'rentInput',food:'foodInput',savingTarget:'savingTargetInput'};
+ Object.entries(map).forEach(([k,id])=>$(id).value=data[k]??0);
+}
+function readInputs(){
+ const map={hourly:'hourlyInput',hours:'hoursInput',deduction:'deductionInput',bonus:'bonusInput',water:'waterInput',electric:'electricInput',gas:'gasInput',rent:'rentInput',food:'foodInput',savingTarget:'savingTargetInput'};
+ Object.entries(map).forEach(([k,id])=>{let v=Number($(id).value);data[k]=Number.isFinite(v)?Math.max(0,v):0;});
+ data.deduction=Math.min(100,data.deduction);
+}
+function saveBudget(){readInputs();save();render();alert('予算設定を保存しました');}
+function renderBudgetChart(){
+ const income=Math.max(0,incomeTotal()),fixed=Math.max(0,fixedTotal());
+ const saving=data.mode==='saving'?Math.max(0,+data.savingTarget||0):0;
+ const free=Math.max(0,income-fixed-saving);
+ const total=Math.max(1,income);
+ const parts=[{label:'固定費',value:fixed,color:'#183047'},{label:'先取り貯金',value:saving,color:'#55b99a'},{label:'自由予算',value:free,color:'#b6e8d1'}];
+ let x=0;
+ const bars=parts.map(p=>{const w=p.value/total*360;const rect=`<rect x="${x}" y="8" width="${Math.max(0,w)}" height="18" rx="7" fill="${p.color}"><title>${p.label}: ${yen(p.value)}</title></rect>`;x+=w;return rect;}).join('');
+ const legend=parts.map(p=>`<div style="display:flex;align-items:center;gap:7px;font-size:12px;margin:8px 0"><span style="width:9px;height:9px;border-radius:4px;background:${p.color};display:inline-block"></span><span style="flex:1;color:#71879a">${p.label}</span><b style="color:#183047">${yen(p.value)}</b></div>`).join('');
+ $('budgetChart').innerHTML=`<svg viewBox="0 0 360 34" role="img" aria-label="予算の内訳">${bars}</svg>${legend}`;
+}
+function render(){
+ $('normalMode').classList.toggle('active',data.mode==='normal');$('savingMode').classList.toggle('active',data.mode==='saving');
+ $('savingTargetWrap').classList.toggle('hidden',data.mode!=='saving');
+ $('monthLabel').textContent='翌月の予算';
+ $('netSalary').textContent=yen(netPay());$('incomePreview').textContent=yen(incomeTotal());
+ $('incomeSummary').textContent=yen(incomeTotal());$('fixedSummary').textContent=yen(fixedTotal());
+ $('savingSummary').textContent=yen(data.mode==='saving'?data.savingTarget:0);$('spentSummary').textContent=yen(spentTotal());
+ $('available').textContent=yen(available());
+ $('heroSub').textContent=data.mode==='saving'?'先取り貯金 '+yen(data.savingTarget)+' 円を確保した後の予算':'固定費と記録済み支出を差し引いた残りの予算';
+ renderBudgetChart();
+ if(available()<0){$('available').classList.add('negative');$('heroSub').textContent+='（予算オーバー）';}else $('available').classList.remove('negative');
+ $('savingDate').value=$('savingDate').value||today();$('expenseDate').value=$('expenseDate').value||today();$('fixedExpenseDate').value=$('fixedExpenseDate').value||today();
+ renderHistory();
+}
+function addExpense(){
+ const name=$('expenseName').value.trim(),amount=Number($('expenseAmount').value),date=$('expenseDate').value||today();
+ if(!name||!Number.isFinite(amount)||amount<=0){alert('内容と正しい金額を入力してください');return;}
+ const expenseId=Date.now();
+ data.expenses.push({id:expenseId,name,amount,category:$('expenseCategory').value,date,kind:'variable'});
+ // 通常支出も同額を貯金の取り崩しとして記録し、累計グラフに反映
+ data.savings.push({id:expenseId+1,amount,type:'withdraw',date,memo:`支出：${name}`,linkedExpenseId:expenseId});
+ $('expenseName').value='';$('expenseAmount').value='';save();render();
+}
+function addFixedExpenses(){
+ const date=$('fixedExpenseDate').value||today();
+ const fixed=[
+  {key:'rent',input:'paidRentInput',name:'家賃'},
+  {key:'gas',input:'paidGasInput',name:'ガス代'},
+  {key:'water',input:'paidWaterInput',name:'水道代'},
+  {key:'electric',input:'paidElectricInput',name:'電気代'}
+ ];
+ let count=0;
+ fixed.forEach((f,i)=>{
+  const amount=Number($(f.input).value);
+  if(!Number.isFinite(amount)||amount<=0)return;
+  const expenseId=Date.now()+i;
+  // 固定費は予算の「通常支出」には含めず、固定費合計だけを実績額に更新
+  data[f.key]=amount;
+  data.expenses.push({id:expenseId,name:f.name,amount,category:'固定費',date,kind:'fixed',fixedKey:f.key,previousFixedAmount:data[f.key]});
+  // 実際の支払いを貯金の取り崩しとしてグラフに反映
+  data.savings.push({id:expenseId+1000,amount,type:'withdraw',date,memo:`固定費：${f.name}`,linkedExpenseId:expenseId,linkedFixed:true});
+  $(f.input).value='';
+  count++;
+ });
+ if(!count){alert('支払った固定費の金額を1つ以上入力してください');return;}
+ save();render();
+}
+function addSaving(){
+ const amount=Number($('savingAmount').value),type=$('savingType').value,date=$('savingDate').value||today(),memo=$('savingMemo').value.trim();
+ if(!Number.isFinite(amount)||amount<=0){alert('正しい金額を入力してください');return;}
+ data.savings.push({id:Date.now(),amount,type,date,memo});$('savingAmount').value='';$('savingMemo').value='';save();render();
+}
+function removeEntry(kind,id){
+ if(!confirm('この記録を削除しますか？'))return;
+ if(kind==='saving'){
+  const entry=data.savings.find(x=>x.id===id);
+  data.savings=data.savings.filter(x=>x.id!==id);
+  // 支出と連動した取り崩しを削除した場合、対応する支出履歴も削除
+  if(entry&&entry.linkedExpenseId!==undefined){
+   const exp=data.expenses.find(x=>x.id===entry.linkedExpenseId);
+   data.expenses=data.expenses.filter(x=>x.id!==entry.linkedExpenseId);
+   if(exp&&exp.kind==='fixed'&&exp.fixedKey!==undefined)data[exp.fixedKey]=exp.previousFixedAmount||0;
+  }
+ }else{
+  const exp=data.expenses.find(x=>x.id===id);
+  data.expenses=data.expenses.filter(x=>x.id!==id);
+  // 支出を削除した場合、連動する取り崩しも削除
+  data.savings=data.savings.filter(x=>x.linkedExpenseId!==id);
+  if(exp&&exp.kind==='fixed'&&exp.fixedKey!==undefined)data[exp.fixedKey]=exp.previousFixedAmount||0;
+ }
+ save();render();
+}
+function dateLabel(d){return d?d.replaceAll('-','/'):'日付なし'}
+function renderList(el,items,kind){
+ if(!items.length){$(el).innerHTML='<div class="empty">まだ記録がありません</div>';return;}
+ $(el).innerHTML=items.slice().sort((a,b)=>b.date.localeCompare(a.date)||b.id-a.id).map(x=>{
+  const isSaving=kind==='saving',label=isSaving?(x.type==='withdraw'?'貯金の取り崩し':'貯金'):`${x.kind==='fixed'?'固定費・':''}${x.category||'その他'}・${x.name}`;
+  const amount=isSaving?(x.type==='withdraw'?-x.amount:x.amount):-x.amount;
+  return `<div class="item"><div style="min-width:0"><div class="item-title">${escapeHtml(label)}</div><div class="item-meta">${dateLabel(x.date)}${x.memo?' · '+escapeHtml(x.memo):''}</div></div><div style="text-align:right"><div class="amount ${amount<0?'negative':''}">${amount<0?'-':'+'}${yen(Math.abs(amount))}</div><button class="soft small-btn" style="margin-top:5px" onclick="removeEntry('${kind}',${x.id})">削除</button></div></div>`;
+ }).join('');
+}
+function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function renderChart(){
+ const sorted=data.savings.slice().sort((a,b)=>a.date.localeCompare(b.date)||a.id-b.id);
+ const byDay={};sorted.forEach(x=>byDay[x.date]=(byDay[x.date]||0)+(x.type==='withdraw'?-x.amount:x.amount));
+ const dates=Object.keys(byDay).sort();let running=0;const points=dates.map(d=>{running+=byDay[d];return {date:d,value:running};});
+ $('savingsTotal').textContent=yen(savingTotal());
+ if(!points.length){$('savingsChart').innerHTML='<div class="empty">貯金を記録すると、ここにグラフが表示されます</div>';return;}
+ const W=440,H=190,L=52,R=12,T=16,B=32,innerW=W-L-R,innerH=H-T-B;
+ const vals=points.map(p=>p.value),min=Math.min(0,...vals),max=Math.max(1,...vals),range=max-min||1;
+ const xx=i=>L+(points.length===1?innerW/2:i*innerW/(points.length-1));
+ const yy=v=>T+innerH-(v-min)/range*innerH;
+ const poly=points.map((p,i)=>`${xx(i)},${yy(p.value)}`).join(' ');
+ const ticks=[0,.5,1].map(t=>{const v=min+range*t,y=yy(v);return `<line x1="${L}" y1="${y}" x2="${W-R}" y2="${y}" stroke="#e9eef4" stroke-width="1"/><text x="${L-7}" y="${y+4}" text-anchor="end" fill="#8290a3" font-size="10">${Math.round(v/1000)}k</text>`}).join('');
+ const dots=points.map((p,i)=>`<circle cx="${xx(i)}" cy="${yy(p.value)}" r="3.5" fill="#168567"><title>${p.date}: ${yen(p.value)}</title></circle>`).join('');
+ const labels=points.map((p,i)=>i===0||i===points.length-1||i===Math.floor(points.length/2)?`<text x="${xx(i)}" y="${H-8}" text-anchor="middle" fill="#8290a3" font-size="9">${p.date.slice(5).replace('-','/')}</text>`:'').join('');
+ $('savingsChart').innerHTML=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="日ごとの累計貯金額の折れ線グラフ">${ticks}<polyline points="${poly}" fill="none" stroke="#168567" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>${dots}${labels}</svg>`;
+}
+function renderHistory(){renderChart();renderList('savingHistory',data.savings,'saving');renderList('expenseHistory',data.expenses,'expense');}
+function exportData(){
+ const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');
+ a.href=url;a.download='予算管理データ.json';a.click();URL.revokeObjectURL(url);
+}
+function resetRecords(){if(confirm('貯金・支出の履歴を削除しますか？')){data.savings=[];data.expenses=[];save();render();}}
+function resetAll(){if(confirm('設定と履歴をすべて削除しますか？')){data={...defaults,expenses:[],savings:[]};save();loadInputs();render();}}
+['hourlyInput','hoursInput','deductionInput','bonusInput'].forEach(id=>$(id).addEventListener('input',()=>{
+ const h=Math.max(0,+$('hourlyInput').value||0),t=Math.max(0,+$('hoursInput').value||0),d=Math.min(100,Math.max(0,+$('deductionInput').value||0)),b=Math.max(0,+$('bonusInput').value||0);
+ $('netSalary').textContent=yen(h*t*(1-d/100));$('incomePreview').textContent=yen(h*t*(1-d/100)+b);
+}));
+$('rentInput').addEventListener('change',()=>{data.rent=Math.max(0,+$('rentInput').value||0);save();});
+loadInputs();$('deductionInput').value=data.deduction??10;render();
+</script>
+</body>
+</html>
